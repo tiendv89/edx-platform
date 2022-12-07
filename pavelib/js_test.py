@@ -101,6 +101,12 @@ def test_js_dev(options):
     test_js(options)
 
 
+@task
+@needs('pavelib.prereqs.install_coverage_prereqs')
+@cmdopts([
+    ("compare-branch=", "b", "Branch to compare against, defaults to origin/master"),
+], share_with=['coverage'])
+@timed
 def diff_coverage(options):
     """
     Build the diff coverage reports
@@ -137,4 +143,3 @@ def diff_coverage(options):
         )
 
         print("\n")
-
