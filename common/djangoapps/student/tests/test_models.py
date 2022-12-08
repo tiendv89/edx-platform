@@ -832,7 +832,7 @@ class TestUserPostSaveCallback(SharedModuleStoreTestCase):
             'username': 'some_user',
             'name': 'Student Person',
             'age': -1,
-            'yearOfBirth': 2022,
+            'yearOfBirth': 2023,
             'education': None,
             'address': None,
             'gender': 'Male',
