@@ -38,7 +38,7 @@ mpmath==1.2.1
     # via sympy
 networkx==2.8.8
     # via -r requirements/edx-sandbox/py38.in
-nltk==3.7
+nltk==3.8
     # via
     #   -r requirements/edx-sandbox/py38.in
     #   chem
