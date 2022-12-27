@@ -520,6 +520,7 @@ class BaseTestDashboardView(SharedModuleStoreTestCase, APITestCase):
         cls.site = SiteFactory()
 
 
+@ddt.ddt
 class TestDashboardView(BaseTestDashboardView):
     """Tests for the dashboard view"""
 
@@ -568,6 +569,7 @@ class TestDashboardView(BaseTestDashboardView):
         response_data = json.loads(response.content)
         expected_keys = set(
             [
+                "countryCode",
                 "emailConfirmation",
                 "enterpriseDashboard",
                 "platformSettings",
@@ -698,6 +700,23 @@ class TestDashboardView(BaseTestDashboardView):
         assert len(data) == len(programs)
         assert programs[course_uuid][0] == program
         assert programs[course_uuid2][0] == program2
+
+    @ddt.data("US", "")
+    @patch.dict(settings.FEATURES, ENTERPRISE_ENABLED=False)
+    @patch("lms.djangoapps.learner_home.views.country_code_from_ip")
+    def test_country_code_from_ip(self, country_code, mock_country_code_from_ip):
+        """Test that country code gets populated correctly."""
+
+        mock_country_code_from_ip.return_value = country_code
+
+        # Given I am logged in
+        self.log_in()
+
+        # When I request the dashboard
+        response = self.client.get(self.view_url)
+
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data["countryCode"], country_code)
 
 
 class TestDashboardMasquerade(BaseTestDashboardView):

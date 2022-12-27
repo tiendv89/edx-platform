@@ -1358,6 +1358,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         """Test that empty inputs return the right keys"""
 
         input_data = {
+            "countryCode": "",
             "emailConfirmation": None,
             "enterpriseDashboard": None,
             "platformSettings": None,
@@ -1371,6 +1372,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         self.assertDictEqual(
             output_data,
             {
+                "countryCode": "",
                 "emailConfirmation": None,
                 "enterpriseDashboard": None,
                 "platformSettings": None,
@@ -1390,6 +1392,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         )
 
         input_data = {
+            "countryCode": "",
             "emailConfirmation": None,
             "enterpriseDashboard": None,
             "platformSettings": None,
@@ -1418,6 +1421,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         )
 
         input_data = {
+            "countryCode": "",
             "emailConfirmation": None,
             "enterpriseDashboards": None,
             "platformSettings": None,
@@ -1453,6 +1457,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         ]
 
         input_data = {
+            "countryCode": "",
             "emailConfirmation": None,
             "enterpriseDashboard": None,
             "platformSettings": None,
@@ -1466,6 +1471,23 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         output_suggested_courses = output_data.pop("suggestedCourses")
 
         self.assertEqual(len(suggested_courses), len(output_suggested_courses))
+
+    def test_country_code(self):
+        """Test country code is serialized correctly."""
+
+        input_data = {
+            "countryCode": "US",
+            "emailConfirmation": None,
+            "enterpriseDashboard": None,
+            "platformSettings": None,
+            "enrollments": [],
+            "unfulfilledEntitlements": [],
+            "socialShareSettings": None,
+            "suggestedCourses": [],
+        }
+        output_data = LearnerDashboardSerializer(input_data).data
+
+        self.assertEqual(output_data["countryCode"], "US")
 
     @mock.patch(
         "lms.djangoapps.learner_home.serializers.SuggestedCourseSerializer.to_representation"
@@ -1515,6 +1537,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         mock_suggestions_serializer.return_value = mock_suggestions_serializer
 
         input_data = {
+            "countryCode": "",
             "emailConfirmation": {},
             "enterpriseDashboard": {},
             "platformSettings": {},
@@ -1528,6 +1551,7 @@ class TestLearnerDashboardSerializer(LearnerDashboardBaseTest):
         self.assertDictEqual(
             output_data,
             {
+                "countryCode": "",
                 "emailConfirmation": mock_email_confirmation_serializer,
                 "enterpriseDashboard": mock_enterprise_dashboard_serializer,
                 "platformSettings": mock_platform_settings_serializer,

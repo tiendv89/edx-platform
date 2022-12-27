@@ -593,6 +593,7 @@ class LearnerDashboardSerializer(serializers.Serializer):
 
     requires_context = True
 
+    countryCode = serializers.CharField(allow_blank=True)
     emailConfirmation = EmailConfirmationSerializer()
     enterpriseDashboard = EnterpriseDashboardSerializer(allow_null=True)
     platformSettings = PlatformSettingsSerializer()

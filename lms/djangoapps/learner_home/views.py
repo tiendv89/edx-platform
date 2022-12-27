@@ -15,6 +15,7 @@ from edx_rest_framework_extensions.auth.session.authentication import (
     SessionAuthenticationAllowInactiveUser,
 )
 from edx_rest_framework_extensions.permissions import NotJwtRestrictedApplication
+from ipware.ip import get_client_ip
 from opaque_keys.edx.keys import CourseKey
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -60,6 +61,7 @@ from lms.djangoapps.learner_home.waffle import (
 )
 from openedx.core.djangoapps.catalog.utils import get_course_data
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+from openedx.core.djangoapps.geoinfo.api import country_code_from_ip
 from openedx.core.djangoapps.programs.utils import ProgramProgressMeter
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
@@ -457,13 +459,14 @@ class InitializeView(APIView):  # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):  # pylint: disable=unused-argument
         """Get masquerade user and proxy to init request"""
         masquerade_user = get_masquerade_user(request)
+        user_ip_address = get_client_ip(request)[0]
 
         if masquerade_user:
-            return self._initialize(masquerade_user, is_masquerade=True)
+            return self._initialize(masquerade_user, user_ip_address, is_masquerade=True)
         else:
-            return self._initialize(request.user)
+            return self._initialize(request.user, user_ip_address)
 
-    def _initialize(self, user, is_masquerade=False):
+    def _initialize(self, user, user_ip_address, is_masquerade=False):
         """
         Load information required for displaying the learner home
         """
@@ -535,6 +538,9 @@ class InitializeView(APIView):  # pylint: disable=unused-argument
         # Get credit availability
         user_credit_statuses = get_credit_statuses(user, course_enrollments)
 
+        # Get country code from user IP address.
+        country_code = country_code_from_ip(user_ip_address)
+
         learner_dash_data = {
             "emailConfirmation": email_confirmation,
             "enterpriseDashboard": enterprise_customer,
@@ -543,6 +549,7 @@ class InitializeView(APIView):  # pylint: disable=unused-argument
             "unfulfilledEntitlements": unfulfilled_entitlements,
             "socialShareSettings": social_share_settings,
             "suggestedCourses": suggested_courses,
+            "countryCode": country_code,
         }
 
         context = {
