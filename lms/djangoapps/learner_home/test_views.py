@@ -829,6 +829,7 @@ class TestDashboardMasquerade(BaseTestDashboardView):
         assert self.get_first_course_id(response) == str(user_3_enrollment.course_id)
 
 
+@ddt.ddt
 class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
     """Unit tests for the course recommendations on learner home page."""
 
@@ -920,7 +921,7 @@ class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
         """
         Verify API returns general recommendations if no course recommendations from amplitude.
         """
-        mocked_get_personalized_course_recommendations.return_value = [False, []]
+        mocked_get_personalized_course_recommendations.return_value = [False, True, []]
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -966,6 +967,7 @@ class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
         """
         mocked_get_personalized_course_recommendations.return_value = [
             False,
+            True,
             self.recommended_courses,
         ]
         mocked_get_course_data.return_value = self.course_data
@@ -993,6 +995,7 @@ class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
         """
         mocked_get_personalized_course_recommendations.return_value = [
             True,
+            True,
             self.recommended_courses,
         ]
 
@@ -1019,6 +1022,7 @@ class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
         """
         mocked_get_personalized_course_recommendations.return_value = [
             False,
+            True,
             self.recommended_courses,
         ]
         mocked_get_course_data.return_value = self.course_data
@@ -1049,6 +1053,7 @@ class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
         """
         mocked_get_personalized_course_recommendations.return_value = [
             False,
+            True,
             self.recommended_courses,
         ]
         mocked_get_course_data.return_value = self.course_data
@@ -1066,3 +1071,36 @@ class TestCourseRecommendationApiView(SharedModuleStoreTestCase):
             response_content.get("courses"),
             self.SERIALIZED_GENERAL_RECOMMENDATIONS,
         )
+
+    @ddt.data(
+        (True, False),
+        (False, True),
+        (False, False),
+        (True, True),
+    )
+    @mock.patch("lms.djangoapps.learner_home.views.segment.track")
+    @mock.patch("lms.djangoapps.learner_home.views.get_course_data")
+    @mock.patch(
+        "lms.djangoapps.learner_home.views.get_personalized_course_recommendations"
+    )
+    @override_waffle_flag(ENABLE_LEARNER_HOME_AMPLITUDE_RECOMMENDATIONS, active=True)
+    @ddt.unpack
+    def test_recommendations_viewed_segment_event(
+        self,
+        is_control,
+        has_is_control,
+        mocked_get_personalized_course_recommendations,
+        mocked_get_course_data,
+        segment_track_mock
+    ):
+        mocked_get_personalized_course_recommendations.return_value = [
+            is_control,
+            has_is_control,
+            self.recommended_courses,
+        ]
+        mocked_get_course_data.return_value = self.course_data
+        expected_is_control = is_control if has_is_control else None
+        self.client.get(self.url)
+
+        assert segment_track_mock.call_args[0][1] == "edx.bi.user.recommendations.viewed"
+        self.assertEqual(segment_track_mock.call_args[0][2]["is_control"], expected_is_control)

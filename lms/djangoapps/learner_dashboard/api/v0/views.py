@@ -358,7 +358,7 @@ class CourseRecommendationApiView(APIView):
     def get(self, request):
         """ Retrieves course recommendations details of a user in a specified course. """
         user_id = request.user.id
-        is_control, course_keys = get_personalized_course_recommendations(user_id)
+        is_control, has_is_control, course_keys = get_personalized_course_recommendations(user_id)
 
         # Emits an event to track student dashboard page visits.
         segment.track(
@@ -366,6 +366,7 @@ class CourseRecommendationApiView(APIView):
             'edx.bi.user.recommendations.viewed',
             {
                 'is_personalized_recommendation': not is_control,
+                'is_control': is_control if has_is_control else None,
             }
         )
 

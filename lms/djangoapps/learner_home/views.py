@@ -603,7 +603,7 @@ class CourseRecommendationApiView(APIView):
 
         try:
             user_id = request.user.id
-            is_control, course_keys = get_personalized_course_recommendations(user_id)
+            is_control, has_is_control, course_keys = get_personalized_course_recommendations(user_id)
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning(f"Cannot get recommendations from Amplitude: {ex}")
             return general_recommendations_response
@@ -614,6 +614,7 @@ class CourseRecommendationApiView(APIView):
             "edx.bi.user.recommendations.viewed",
             {
                 "is_personalized_recommendation": not is_control,
+                "is_control": is_control if has_is_control else None,
             },
         )
 
