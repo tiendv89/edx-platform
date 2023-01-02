@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.track import segment
+from openedx.core.djangoapps.catalog.utils import get_course_data
 from openedx.core.djangoapps.programs.utils import (
     ProgramProgressMeter,
     get_certificates,
@@ -17,8 +18,10 @@ from openedx.core.djangoapps.programs.utils import (
     get_program_and_course_data,
     get_program_urls
 )
-from openedx.core.djangoapps.catalog.utils import get_course_data
-from lms.djangoapps.learner_dashboard.api.utils import get_personalized_course_recommendations
+from lms.djangoapps.learner_dashboard.api.utils import (
+    get_personalized_course_recommendations,
+    get_algolia_courses_recommendation
+)
 
 
 class Programs(APIView):
@@ -394,3 +397,23 @@ class CourseRecommendationApiView(APIView):
                 })
 
         return Response({'courses': recommended_courses, 'is_personalized_recommendation': not is_control}, status=200)
+
+
+class AlgoliaCoursesSearchView(APIView):
+    """
+    **Example Request**
+
+    GET api/dashboard/v0/algolia/courses/{course_id}/
+    """
+
+    authentication_classes = (JwtAuthentication, SessionAuthenticationAllowInactiveUser,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, course_id):
+        """ Retrieves course recommendations from Algolia based on course skills. """
+        fields = ['key', 'title', 'level_type', 'skill_names']
+
+        course_data = get_course_data(course_id, fields)
+        recommended_courses = get_algolia_courses_recommendation(course_data)
+
+        return Response({'courses': recommended_courses}, status=200)
